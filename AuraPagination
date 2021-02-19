@@ -1,0 +1,96 @@
+HELPER
+
+let Verification = JSON.parse( response.getReturnValue() );
+                let length = Verification.length;
+                console.log( "Length --> "+length ); 
+                component.set( "v.Totalsize", Verification.length );
+                let size = component.get("v.size");
+                let lastPage = length > size ? Math.floor(length/size) : 1;
+                component.set( "v.lastPage", lastPage );
+                component.set( "v.VerificationAllData",  Verification );
+                if( length <= 5 ){
+                    component.set( "v.Verification",  Verification );
+                }else{ 
+                    let crtVerification = this.getVerificationData(component,event,Verification,
+                                                                   1,
+                                                                   component.get("v.size")
+                                                                  ); //component.get("v.crtPage")
+                    console.log( "crtVerification --> "+crtVerification );
+                    component.set( "v.Verification", crtVerification ); 
+                }
+
+getVerificationData : function(component,event,Verification, crtPage, size){
+        console.log( "In getVerificationData --> " );
+        let crtVerification = [];    
+        let Totalsize = component.get("v.Totalsize");
+        console.log( "Totalsize --> "+Totalsize );
+        console.log( "crtPage*size --> "+crtPage*size );
+        let finalLength = crtPage*size > Totalsize ? Totalsize : crtPage*size; 
+        console.log( "finalLength --> "+finalLength );
+        for( let i = (crtPage-1)*5; i < finalLength; i++ ){            
+            crtVerification.push( Verification[i] );                 
+        }
+        console.log( "crtVerification --> "+crtVerification);
+        return crtVerification;
+    },
+    firsthelper : function( component,event ){
+        component.set("v.crtPage", 1);
+        component.set( "v.Verification", 
+                      this.getVerificationData(component,event,component.get( "v.VerificationAllData"),
+                                               component.get("v.crtPage"),component.get("v.size"))
+                     ); 
+    },
+    prevhelper : function( component,event ){
+        if( component.get("v.crtPage") == 2 ){ this.first( component,event ); }
+        else{ 
+            let crtPage = component.get("v.crtPage");
+            component.set("v.crtPage", crtPage-1 );
+            component.set( "v.Verification", 
+                          this.getVerificationData(component,event,component.get( "v.VerificationAllData"),
+                                                   component.get("v.crtPage"),component.get("v.size"))
+                         ); 
+        }
+    },
+    nexthelper : function( component,event ){
+        if( component.get("v.crtPage") - component.get("v.lastPage") == 1 ){ this.lasthelper(component,event); }
+        else{ 
+            let crtPage = component.get("v.crtPage");
+            component.set("v.crtPage", crtPage+1 );
+            console.log( "crtPage --> "+component.get("v.crtPage") );
+            component.set( "v.Verification", 
+                          this.getVerificationData(component,event,component.get( "v.VerificationAllData"),
+                                                   component.get("v.crtPage"),component.get("v.size"))
+                         ); 
+        }
+    },
+    lasthelper : function( component,event ){
+        component.set("v.crtPage", component.get("v.lastPage"));
+        component.set( "v.Verification", 
+                      this.getVerificationData(component,event,component.get( "v.VerificationAllData"),
+                                               component.get("v.crtPage"),component.get("v.size"))
+                     ); 
+    }
+    
+    CONTROLLER
+   
+   first : function(component,event,helper){
+        helper.firsthelper(component,event);
+    },
+    prev : function(component,event,helper){
+        helper.prevhelper(component,event);
+    },
+    next : function(component,event,helper){
+        helper.nexthelper(component,event)
+    },
+    last : function(component,event,helper){
+        helper.lasthelper(component,event);
+    }
+    
+    COMPONENT
+    
+    <lightning:buttonGroup>
+        <lightning:button label="First" onclick="{!c.first}" disabled="{! v.crtPage == 1 }" />
+        <lightning:button label="Previous" onclick="{!c.prev}" disabled="{! v.crtPage == 1 }" />
+        <lightning:button label="Next" onclick="{!c.next}" disabled="{! v.crtPage == v.lastPage }" />
+        <lightning:button label="Last" onclick="{!c.last}" disabled="{! v.crtPage == v.lastPage }" />
+    
